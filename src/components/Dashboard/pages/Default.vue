@@ -21,7 +21,16 @@
           />
         </b-form-group>
       </b-col>
-
+      <b-col>
+        <b-form-group label="Date From" label-for="date_from">
+          <b-form-input id="date_from" v-model="dateFrom" @input="reloadTable"></b-form-input>
+        </b-form-group>
+      </b-col>
+      <b-col>
+        <b-form-group label="Date To" label-for="date_to">
+          <b-form-input id="date_to" v-model="dateTo" @input="reloadTable"></b-form-input>
+        </b-form-group>
+      </b-col>
       <b-col>
         <b-form-group label="Source" label-for="source">
           <b-form-select
@@ -116,6 +125,8 @@ export default {
         list: [],
         selected: 100
       },
+      dateFrom: "",
+      dateTo: "",
       sortBy: "id",
       sortDesc: true,
       filter: "",
@@ -198,6 +209,8 @@ export default {
           query: ctx.filter,
           source: this.sources.selected,
           min_level: this.levels.selected,
+          date_from: this.dateFrom,
+          date_to: this.dateTo,
           action: "getRecords"
         }
       })

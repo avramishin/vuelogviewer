@@ -40,6 +40,8 @@ class MainController
             $page = $this->getRequest("page", 1);
             $filter = $this->getRequest("query");
             $minLevel = (int)$this->getRequest("min_level", 100);
+            $dateFrom = $this->getRequest("date_from");
+            $dateTo = $this->getRequest("date_to");
 
             $offset = ($page - 1) * $limit;
 
@@ -51,12 +53,31 @@ class MainController
                 $sql[] = "AND (message LIKE :filter OR channel LIKE :filter OR extra LIKE :filter OR context LIKE :filter)";
             }
 
+            if ($dateFrom) {
+                $sql[] = "AND created_at >= :date_from";
+            }
+
+            if ($dateTo) {
+                $sql[] = "AND created_at <= :date_to";
+            }
+
             $sql[] = "ORDER BY `{$sort}` {$order} LIMIT :limit OFFSET :offset";
 
             $dataQuery = $pdo->prepare(join(" ", $sql));
             $dataQuery->bindParam(":min_level", $minLevel, PDO::PARAM_INT);
             $dataQuery->bindParam(":limit", $limit, PDO::PARAM_INT);
             $dataQuery->bindParam(":offset", $offset, PDO::PARAM_INT);
+
+            if ($dateFrom) {
+                $dateFromFormatted = date("Y-m-d H:i:s", strtotime($dateFrom));
+                $dataQuery->bindParam(":date_from", $dateFromFormatted);
+            }
+
+            if ($dateTo) {
+                $dateToFormatted = date("Y-m-d H:i:s", strtotime($dateTo));
+                $dataQuery->bindParam(":date_to", $dateToFormatted);
+            }
+
             if ($filter) {
                 $wideFilter = "%{$filter}%";
                 $dataQuery->bindParam(":filter", $wideFilter);
