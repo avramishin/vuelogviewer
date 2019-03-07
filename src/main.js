@@ -4,7 +4,7 @@ import App from "./App.vue";
 import VueRouter from "vue-router";
 import EvaIcons from "vue-eva-icons";
 import Api from './plugins/Api.js'
-import axios from 'axios'
+import TreeView from "vue-json-tree-view"
 
 import "./assets/css/simplex/bootstrap.min.css";
 //import "./assets/css/sketchy/bootstrap.min.css"
@@ -13,6 +13,7 @@ import "bootstrap-vue/dist/bootstrap-vue.css";
 Vue.use(BootstrapVue);
 Vue.use(VueRouter);
 Vue.use(EvaIcons);
+Vue.use(TreeView);
 
 Vue.use(Api, {
     baseURL: api_base_url,

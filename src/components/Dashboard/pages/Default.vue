@@ -3,25 +3,41 @@
     <div>
       <h2 class="text-right">Logs Management Dashboard</h2>
     </div>
-    <div class="d-flex py-1">
-      <div class="flex-grow-1">
-        <b-form-group class="mb-0" style="width: 400px">
-          <b-input-group>
-            <b-form-input
-              v-model="filterInput"
-              placeholder="Type to Search"
-              class="form-control"
-              style="width: 300px"
-            ></b-form-input>
-            <b-btn class="ml-1 btn-sm" @click>Search</b-btn>
-          </b-input-group>
+
+    <b-row>
+      <b-col>
+        <b-form-group label="Filter" label-for="filter">
+          <b-form-input id="filter" v-model="filterInput" placeholder="Type to Search"></b-form-input>
         </b-form-group>
-      </div>
-    </div>
+      </b-col>
+
+      <b-col>
+        <b-form-group label="Min Level" label-for="level">
+          <b-form-select
+            id="level"
+            v-model="levels.selected"
+            :options="levels.list"
+            @change="reloadTable"
+          />
+        </b-form-group>
+      </b-col>
+
+      <b-col>
+        <b-form-group label="Source" label-for="source">
+          <b-form-select
+            id="source"
+            v-model="sources.selected"
+            :options="sources.list"
+            @change="reloadTable"
+          />
+        </b-form-group>
+      </b-col>
+    </b-row>
 
     <div>
       <b-table
         show-empty
+        ref="table"
         class="w-100 table-sm"
         :sort-by.sync="sortBy"
         :sort-desc.sync="sortDesc"
@@ -40,18 +56,8 @@
         </template>
         <template slot="row-details" slot-scope="row">
           <b-card>
-            <b-row class="mb-2">
-              <b-col sm="3" class="text-sm-right">
-                <b>Age:</b>
-              </b-col>
-              <b-col>{{ row.item.age }}</b-col>
-            </b-row>
-            <b-row class="mb-2">
-              <b-col sm="3" class="text-sm-right">
-                <b>Is Active:</b>
-              </b-col>
-              <b-col>{{ row.item.isActive }}</b-col>
-            </b-row>
+            <tree-view :data="JSON.parse(row.item.context)" :options="{maxDepth: 3}"></tree-view>
+            <tree-view :data="JSON.parse(row.item.extra)" :options="{maxDepth: 3}"></tree-view>
           </b-card>
         </template>
       </b-table>
@@ -67,7 +73,7 @@
         ></b-pagination>
       </div>
       <div class="ml-2 align-self-center">
-        <span>{{totalRows}} traders found</span>
+        <span>{{totalRows}} record(s) found</span>
       </div>
     </div>
   </div>
@@ -90,67 +96,47 @@ export default {
 
   created() {
     this.debouncedSetFilter = _.debounce(this.setFilter, 500);
+    this.loadSources();
   },
 
   data() {
     return {
+      sources: {
+        list: [],
+        selected: ""
+      },
+      levels: {
+        list: [],
+        selected: null
+      },
       sortBy: "id",
       sortDesc: true,
       filter: "",
       filterInput: "",
-      perPage: 10,
+      perPage: 50,
       currentPage: 1,
 
       fields: [
-        { key: "id", label: "ID", sortable: true, thStyle: "width: 80px" },
-        { key: "email", label: "E-Mail", sortable: true },
         {
-          key: "balance",
-          label: "Balance",
+          key: "created_at",
+          label: "Timestamp",
           sortable: true,
-          formatter: value => {
-            return "$" + (value ? Number(value).toFixed(2) : "0.00");
-          }
+          thStyle: "width: 180px"
         },
         {
-          key: "profit",
-          label: "Profit",
-          sortable: true,
-          formatter: value => {
-            return "$" + (value ? Number(value).toFixed(2) : "0.00");
-          }
-        },
-        {
-          key: "loss",
-          label: "Loss",
-          sortable: true,
-          formatter: value => {
-            return "$" + (value ? Number(value).toFixed(2) : "0.00");
-          }
-        },
-        {
-          key: "trades_count",
-          label: "Trades Count",
+          key: "level",
+          label: "Level",
           sortable: false,
+          thStyle: "width: 130px",
           formatter: value => {
-            return value ? parseInt(value) : 0;
+            return log_levels[value];
           }
         },
+        { key: "channel", label: "Channel", sortable: false },
         {
-          key: "deposits_number",
-          label: "Deposits",
-          sortable: false,
-          formatter: value => {
-            return value ? parseInt(value) : 0;
-          }
-        },
-        {
-          key: "withdrawals_number",
-          label: "Withdrawals",
-          sortable: false,
-          formatter: value => {
-            return value ? parseInt(value) : 0;
-          }
+          key: "message",
+          label: "Message",
+          sortable: false
         },
         {
           key: "show_details",
@@ -166,11 +152,34 @@ export default {
   },
 
   methods: {
+    loadSources() {
+      this.$api({
+        method: "GET",
+        url: "/",
+        params: {
+          action: "getSources"
+        }
+      }).then(response => {
+        this.sources.list = response.data.sources;
+        if (this.sources.list.length) {
+          this.sources.selected = this.sources.list[0];
+          this.reloadTable();
+        } else {
+          alert("No sources configured");
+        }
+      });
+    },
+    reloadTable() {
+      this.$refs.table.refresh();
+    },
     setFilter() {
       this.filter = this.filterInput;
     },
 
     itemsProvider(ctx) {
+      if (!this.sources.selected) {
+        return Promise.resolve([[]]);
+      }
       return this.$api({
         method: "GET",
         url: "/",
@@ -180,6 +189,8 @@ export default {
           sort: ctx.sortBy,
           order: ctx.sortDesc ? "DESC" : "ASC",
           query: ctx.filter,
+          source: this.sources.selected,
+          min_level: this.levels.selected,
           action: "getRecords"
         }
       })

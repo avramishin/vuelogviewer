@@ -9,16 +9,16 @@ return [
         [
             "username" => "admin",
             "password" => "admin",
-            "connections" => ["Hummingbird", "Whitelabel"]
+            "sources" => ["Hummingbird", "Whitelabel"]
         ],
         [
             "username" => "manager",
             "password" => "manager",
-            "connections" => ["Whitelabel"]
+            "sources" => ["Whitelabel"]
         ]
     ],
 
-    "database_connections" => [
+    "database_sources" => [
         "Hummingbird" => [
             "host" => "localhost",
             "name" => "my_logs",
@@ -33,5 +33,16 @@ return [
             "user" => "root",
             "pass" => "root"
         ]
+    ],
+
+    "log_levels" => [
+        100 => "DEBUG",
+        200 => "INFO",
+        250 => "NOTICE",
+        300 => "WARNING",
+        400 => "ERROR",
+        500 => "CRITICAL",
+        550 => "ALERT",
+        600 => "EMERGENCY"
     ]
 ];

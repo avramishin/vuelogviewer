@@ -4,15 +4,13 @@ require_once __DIR__ . "/config.php";
 class MainController
 {
     var $cfg;
-    var $action;
 
     function __construct()
     {
-        $this->checkEnv();
+        $this->checkEnvironment();
         $this->cfg = require __DIR__ . "/config.php";
-        $this->action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : "index";
-
-        $method = "{$this->action}Action";
+        $action = $this->getRequest("action", "index");
+        $method = "{$action}Action";
 
         if (!method_exists($this, $method)) {
             die("Unknown action");
@@ -26,30 +24,42 @@ class MainController
     {
         $user = $this->getAuthUser();
         try {
-            $connection = isset($_REQUEST["connection"]) ? $_REQUEST["connection"] : "";
+            $source = $this->getRequest("source");
 
-            if (!in_array($connection, $user["connections"])) {
-                throw new Exception("User does not have connection: {$connection}");
+            if (!in_array($source, $user["sources"])) {
+                throw new Exception("User does not have source: {$source}");
             }
 
-            if (!isset($this->cfg["database_connections"][$connection])) {
-                throw new Exception("Invalid connection name: {$connection}");
+            if (!isset($this->cfg["database_sources"][$source])) {
+                throw new Exception("Invalid source name: {$source}");
             }
 
-            $sort = isset($_REQUEST["sort"]) ? $_REQUEST["sort"] : "id";
-            $order = isset($_REQUEST["order"]) ? $_REQUEST["order"] : "DESC";
-            $limit = isset($_REQUEST["rows"]) ? $_REQUEST["rows"] : 50;
-            $page = isset($_REQUEST["page"]) ? $_REQUEST["page"] : 1;
+            $sort = $this->getRequest("sort", "id");
+            $order = $this->getRequest("order", "DESC");
+            $limit = (int)$this->getRequest("rows", 50);
+            $page = $this->getRequest("page", 1);
+            $filter = $this->getRequest("query");
+
             $offset = ($page - 1) * $limit;
 
-            $table = $this->cfg["database_connections"][$connection]["table"];
-            $pdo = $this->getPdo($this->cfg["database_connections"][$connection]);
-            $dataQuery = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS * 
-            FROM {$table} 
-            ORDER BY `{$sort}` {$order} 
-            LIMIT :limit OFFSET :offset");
+            $table = $this->cfg["database_sources"][$source]["table"];
+            $pdo = $this->getPdo($this->cfg["database_sources"][$source]);
+            $sql = ["SELECT SQL_CALC_FOUND_ROWS * FROM {$table} WHERE 1=1"];
+
+            if ($filter) {
+                $sql[] = "AND (message LIKE :filter OR channel LIKE :filter OR extra LIKE :filter OR context LIKE :filter)";
+            }
+
+            $sql[] = "ORDER BY `{$sort}` {$order} LIMIT :limit OFFSET :offset";
+
+            $dataQuery = $pdo->prepare(join(" ", $sql));
             $dataQuery->bindParam(":limit", $limit, PDO::PARAM_INT);
             $dataQuery->bindParam(":offset", $offset, PDO::PARAM_INT);
+            if ($filter) {
+                $wideFilter = "%{$filter}%";
+                $dataQuery->bindParam(":filter", $wideFilter);
+            }
+
             $dataQuery->execute();
             $records = $dataQuery->fetchAll();
             $foundRows = $pdo->query("SELECT FOUND_ROWS()")->fetchColumn();
@@ -63,11 +73,11 @@ class MainController
         }
     }
 
-    function listConnectionsAction()
+    function getSourcesAction()
     {
         $user = $this->getAuthUser();
         $this->jsonResponse([
-            "connections" => $user["connections"]
+            "sources" => $user["sources"]
         ]);
     }
 
@@ -81,9 +91,8 @@ class MainController
     {
         try {
 
-            $username = isset($_REQUEST["username"]) ? $_REQUEST["username"] : "";
-            $password = isset($_REQUEST["password"]) ? $_REQUEST["password"] : "";
-
+            $username = $this->getRequest("username");
+            $password = $this->getRequest("password");
             $authenticated = false;
 
             foreach ($this->cfg["users"] as $user) {
@@ -111,7 +120,7 @@ class MainController
             setcookie("vue_auth_token", $auth_token, $expires, '/');
             $this->jsonResponse([
                 "username" => $username,
-                "connections" => $authenticated["connections"],
+                "sources" => $authenticated["sources"],
                 "auth_token" => $auth_token,
                 "expires" => date("Y-m-d H:i:s", $expires)
             ]);
@@ -172,7 +181,7 @@ class MainController
         return new PDO($dsn, $conn["user"], $conn["pass"], $opt);
     }
 
-    function checkEnv()
+    function checkEnvironment()
     {
         if (!class_exists("PDO")) {
             die("PDO extension not installed");
@@ -204,6 +213,19 @@ class MainController
         echo json_encode($response, JSON_PRETTY_PRINT);
         flush();
         exit();
+    }
+
+    function getRequest($key, $default = "")
+    {
+        if (isset($_REQUEST[$key])) {
+            if (is_array($_REQUEST[$key])) {
+                return $_REQUEST[$key];
+            }
+
+            return trim($_REQUEST[$key]);
+        }
+
+        return $default;
     }
 }
 
