@@ -39,12 +39,13 @@ class MainController
             $limit = (int)$this->getRequest("rows", 50);
             $page = $this->getRequest("page", 1);
             $filter = $this->getRequest("query");
+            $minLevel = (int)$this->getRequest("min_level", 100);
 
             $offset = ($page - 1) * $limit;
 
             $table = $this->cfg["database_sources"][$source]["table"];
             $pdo = $this->getPdo($this->cfg["database_sources"][$source]);
-            $sql = ["SELECT SQL_CALC_FOUND_ROWS * FROM {$table} WHERE 1=1"];
+            $sql = ["SELECT SQL_CALC_FOUND_ROWS * FROM {$table} WHERE level >= :min_level"];
 
             if ($filter) {
                 $sql[] = "AND (message LIKE :filter OR channel LIKE :filter OR extra LIKE :filter OR context LIKE :filter)";
@@ -53,6 +54,7 @@ class MainController
             $sql[] = "ORDER BY `{$sort}` {$order} LIMIT :limit OFFSET :offset";
 
             $dataQuery = $pdo->prepare(join(" ", $sql));
+            $dataQuery->bindParam(":min_level", $minLevel, PDO::PARAM_INT);
             $dataQuery->bindParam(":limit", $limit, PDO::PARAM_INT);
             $dataQuery->bindParam(":offset", $offset, PDO::PARAM_INT);
             if ($filter) {

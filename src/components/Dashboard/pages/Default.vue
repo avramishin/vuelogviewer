@@ -17,7 +17,7 @@
             id="level"
             v-model="levels.selected"
             :options="levels.list"
-            @change="reloadTable"
+            @input="reloadTable"
           />
         </b-form-group>
       </b-col>
@@ -28,7 +28,7 @@
             id="source"
             v-model="sources.selected"
             :options="sources.list"
-            @change="reloadTable"
+            @input="reloadTable"
           />
         </b-form-group>
       </b-col>
@@ -95,8 +95,15 @@ export default {
   },
 
   created() {
-    this.debouncedSetFilter = _.debounce(this.setFilter, 500);
-    this.loadSources();
+    let me = this;
+    me.debouncedSetFilter = _.debounce(this.setFilter, 500);
+    me.loadSources();
+    Object.keys(log_levels).map(function(key, index) {
+      me.levels.list.push({
+        text: log_levels[key],
+        value: key
+      });
+    });
   },
 
   data() {
@@ -107,7 +114,7 @@ export default {
       },
       levels: {
         list: [],
-        selected: null
+        selected: 100
       },
       sortBy: "id",
       sortDesc: true,
