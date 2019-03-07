@@ -1,37 +1,13 @@
 <template>
   <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-    <div class="sidebar-sticky">
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <b-link class="nav-link active" to="/">Home</b-link>
-        </li>
-        <li class="nav-item">
-          <b-link class="nav-link" to="/trader/list">Traders</b-link>
-        </li>
-      </ul>
-    </div>
+    <div class="sidebar-sticky"></div>
   </nav>
 </template>
 
 <script>
 export default {
-  methods: {
-    listConnections() {
-      this.$api({
-        method: "GET",
-        url: "/",
-        params: {
-          action: "listConnections"
-        }
-      })
-        .then(response => {})
-        .catch(error => {});
-    }
-  },
-
-  created() {
-    this.listConnections();
-  },
+  methods: {},
+  created() {},
   data() {
     return {};
   }

@@ -15,7 +15,8 @@ Vue.use(VueRouter);
 Vue.use(EvaIcons);
 
 Vue.use(Api, {
-    baseURL: api_base_url
+    baseURL: api_base_url,
+    withCredentials: true
 })
 
 import Dashboard from "./components/Dashboard/Layout.vue";

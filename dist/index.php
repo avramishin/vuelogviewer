@@ -58,7 +58,6 @@ class MainController
                 "rows" => $records,
                 "total" => $foundRows
             ]);
-
         } catch (Exception $e) {
             $this->jsonResponse(["error" => $e->getMessage()]);
         }
@@ -116,7 +115,6 @@ class MainController
                 "auth_token" => $auth_token,
                 "expires" => date("Y-m-d H:i:s", $expires)
             ]);
-
         } catch (Exception $e) {
             $this->jsonResponse(["error" => $e->getMessage()]);
         }
@@ -156,7 +154,6 @@ class MainController
             }
 
             throw new Exception("User not found");
-
         } catch (Exception $e) {
             http_response_code(401);
             $this->jsonResponse(["error" => $e->getMessage()]);
@@ -188,20 +185,17 @@ class MainController
 
     function handleCORS()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
-                header("Access-Control-Allow-Origin: *");
-                header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-            }
-
-            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
-                header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-            }
-            exit(0);
+        $origin = isset($_SERVER["HTTP_ORIGIN"]) ? $_SERVER["HTTP_ORIGIN"] : "*";
+        header("Access-Control-Allow-Origin: {$origin}");
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+        if (isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"])) {
+            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
         }
 
-        header("Access-Control-Allow-Origin: *");
-        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+        if ($_SERVER["REQUEST_METHOD"] == "OPTIONS") {
+            exit(0);
+        }
     }
 
     function jsonResponse($response)

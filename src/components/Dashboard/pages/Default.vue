@@ -10,7 +10,7 @@
             <b-form-input
               v-model="filterInput"
               placeholder="Type to Search"
-              class="form-control-sm"
+              class="form-control"
               style="width: 300px"
             ></b-form-input>
             <b-btn class="ml-1 btn-sm" @click>Search</b-btn>
