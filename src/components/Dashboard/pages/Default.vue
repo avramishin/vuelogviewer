@@ -1,17 +1,17 @@
 <template>
   <div class="w-100">
     <div>
-      <h2 class="text-right">Logs Management Dashboard</h2>
+      <h2 class="text-right d-none d-lg-block">Logs Management Dashboard</h2>
     </div>
 
     <b-row>
-      <b-col>
+      <b-col md>
         <b-form-group label="Filter" label-for="filter">
           <b-form-input id="filter" v-model="filterInput" placeholder="Type to Search"></b-form-input>
         </b-form-group>
       </b-col>
 
-      <b-col>
+      <b-col md>
         <b-form-group label="Min Level" label-for="level">
           <b-form-select
             id="level"
@@ -21,17 +21,17 @@
           />
         </b-form-group>
       </b-col>
-      <b-col>
+      <b-col md class="d-none d-lg-block">
         <b-form-group label="Date From" label-for="date_from">
           <b-form-input id="date_from" v-model="dateFrom" @input="reloadTable"></b-form-input>
         </b-form-group>
       </b-col>
-      <b-col>
+      <b-col class="d-none d-lg-block">
         <b-form-group label="Date To" label-for="date_to">
           <b-form-input id="date_to" v-model="dateTo" @input="reloadTable"></b-form-input>
         </b-form-group>
       </b-col>
-      <b-col>
+      <b-col md>
         <b-form-group label="Source" label-for="source">
           <b-form-select
             id="source"
@@ -65,8 +65,18 @@
         </template>
         <template slot="row-details" slot-scope="row">
           <b-card>
-            <tree-view :data="JSON.parse(row.item.context)" :options="{maxDepth: 3}"></tree-view>
-            <tree-view :data="JSON.parse(row.item.extra)" :options="{maxDepth: 3}"></tree-view>
+            <div>
+              <b>Channel:</b>
+              <span>{{row.item.channel}}</span>
+            </div>
+            <tree-view
+              :data="JSON.parse(row.item.context)"
+              :options="{maxDepth: 3,  rootObjectKey: 'context'}"
+            ></tree-view>
+            <tree-view
+              :data="JSON.parse(row.item.extra)"
+              :options="{maxDepth: 3,  rootObjectKey: 'extra'}"
+            ></tree-view>
           </b-card>
         </template>
       </b-table>
@@ -150,7 +160,12 @@ export default {
             return log_levels[value];
           }
         },
-        { key: "channel", label: "Channel", sortable: false },
+        {
+          key: "channel",
+          label: "Channel",
+          class: "d-none d-lg-block",
+          sortable: false
+        },
         {
           key: "message",
           label: "Message",
@@ -232,4 +247,7 @@ export default {
 </script>
 
 <style lang="scss">
+.table thead th {
+  border-bottom: 0;
+}
 </style>
