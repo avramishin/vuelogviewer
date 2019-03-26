@@ -41,6 +41,11 @@
           />
         </b-form-group>
       </b-col>
+      <b-col md>
+        <b-form-group label="&nbsp;" label-for="refresh">
+          <b-button id="refresh" class="w-100" @click="reloadTable">Refresh</b-button>
+        </b-form-group>
+      </b-col>
     </b-row>
 
     <div>
@@ -115,7 +120,7 @@ export default {
 
   created() {
     let me = this;
-    me.debouncedSetFilter = _.debounce(this.setFilter, 500);
+    me.debouncedSetFilter = _.debounce(this.setFilter, 1000);
     me.loadSources();
     Object.keys(log_levels).map(function(key, index) {
       me.levels.list.push({

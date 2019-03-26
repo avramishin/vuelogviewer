@@ -9,7 +9,7 @@ return [
         [
             "username" => "admin",
             "password" => "admin",
-            "sources" => ["Hummingbird", "Whitelabel"]
+            "sources" => ["Whitelabel"]
         ],
         [
             "username" => "manager",
@@ -28,7 +28,7 @@ return [
         ],
         "Whitelabel" => [
             "host" => "localhost",
-            "name" => "my_logs",
+            "name" => "whitelabel_logs",
             "table" => "whitelabel",
             "user" => "root",
             "pass" => "root"
